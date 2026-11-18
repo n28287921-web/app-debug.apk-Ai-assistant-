@@ -1,0 +1,90 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user profile and approved Jarvis VIP preferences.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Authenticated Firebase UID" },
+        "displayName": { "type": "string", "description": "User display name" },
+        "email": { "type": "string", "description": "User email address" },
+        "preferredLanguage": { "type": "string", "enum": ["bilingual", "en", "hi"] },
+        "voiceEnabled": { "type": "boolean", "description": "Female TTS response toggle" },
+        "handsFreeWakeWord": { "type": "boolean", "description": "Opt-in Hey JARVIS wake word mode" },
+        "backendBaseUrl": { "type": "string", "description": "HTTPS URL for secure ChatGPT backend proxy" },
+        "openAiModel": { "type": "string", "description": "Preferred OpenAI model identifier" },
+        "accessibilityConsentGranted": { "type": "boolean", "description": "User-consented accessibility automation toggle" },
+        "notificationListenerConsentGranted": { "type": "boolean", "description": "User-consented notification reader toggle" },
+        "approvedPreferencesSummary": { "type": "string", "description": "User-approved AI memory summary" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp via FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp via FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "displayName", "preferredLanguage", "voiceEnabled", "handsFreeWakeWord", "createdAt", "updatedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Conversation history message between user and Jarvis VIP.",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["user", "assistant", "system"] },
+        "content": { "type": "string", "description": "Message text in English or Hindi" },
+        "languageTag": { "type": "string", "enum": ["en", "hi", "bilingual"] },
+        "actionSummary": { "type": "string", "description": "Optional summary of triggered device/assistant action" },
+        "actionStatus": { "type": "string", "enum": ["none", "pending_confirm", "executed", "failed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp via FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp via FieldValue.serverTimestamp()" }
+      },
+      "required": ["role", "content", "languageTag", "createdAt", "updatedAt"]
+    },
+    "AssistantTask": {
+      "title": "AssistantTask",
+      "description": "Smart tasks, reminders, daily schedule items, and birthday reminders.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Task or reminder title" },
+        "notes": { "type": "string", "description": "Optional details" },
+        "category": { "type": "string", "enum": ["task", "reminder", "schedule", "birthday"] },
+        "dueDateLabel": { "type": "string", "description": "Readable due date or birthday date" },
+        "dueTimeLabel": { "type": "string", "description": "Readable time label" },
+        "completed": { "type": "boolean", "description": "Completion state" },
+        "priority": { "type": "string", "enum": ["low", "normal", "high"] },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp via FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp via FieldValue.serverTimestamp()" }
+      },
+      "required": ["title", "category", "completed", "priority", "createdAt", "updatedAt"]
+    },
+    "ActionLog": {
+      "title": "ActionLog",
+      "description": "Audit log for device control and automation tasks.",
+      "type": "object",
+      "properties": {
+        "commandText": { "type": "string", "description": "Original user command" },
+        "actionType": { "type": "string", "description": "Executed automation action type" },
+        "targetSummary": { "type": "string", "description": "Target app, contact, or setting" },
+        "status": { "type": "string", "enum": ["executed", "confirmed", "cancelled", "failed"] },
+        "detailMessage": { "type": "string", "description": "Outcome detail message" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp via FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp via FieldValue.serverTimestamp()" }
+      },
+      "required": ["commandText", "actionType", "targetSummary", "status", "detailMessage", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile and Jarvis VIP preferences"
+    },
+    "/users/{userId}/chatMessages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "User conversation messages with Jarvis VIP"
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/AssistantTask" },
+      "description": "User smart tasks, reminders, daily schedule, and birthdays"
+    },
+    "/users/{userId}/actionLogs/{logId}": {
+      "schema": { "$ref": "#/entities/ActionLog" },
+      "description": "User automation and device control audit trail"
+    }
+  }
+}

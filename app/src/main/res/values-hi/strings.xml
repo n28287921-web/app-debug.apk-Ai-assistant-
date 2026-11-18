@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Jarvis VIP</string>
+    <string name="accessibility_service_label">जार्विस वीआईपी नेविगेशन सहायक</string>
+    <string name="accessibility_service_description">वॉइस कमांड (जैसे बैक, होम, रीसेंट्स, नोटिफिकेशन) के लिए वैकल्पिक नेविगेशन सहायक। केवल उपयोगकर्ता की स्पष्ट अनुमति से ही सक्रिय।</string>
+    <string name="notification_listener_label">जार्विस वीआईपी नोटिफिकेशन रीडर</string>
+    <string name="auth_title">JARVIS VIP</string>
+    <string name="auth_subtitle">पर्सनल एआई कमांड सेंटर • हिन्दी और अंग्रेजी</string>
+    <string name="auth_sign_in_cta">Google से साइन इन करें</string>
+    <string name="nav_hud">हड</string>
+    <string name="nav_chat">चैट</string>
+    <string name="nav_tasks">प्लानर</string>
+    <string name="nav_control">कंट्रोल</string>
+    <string name="nav_settings">सेटिंग्स</string>
+    <string name="status_standby">कोर ऑनलाइन • तैयार</string>
+    <string name="status_listening">सुन रही हूँ • बोलिए</string>
+    <string name="status_wake_word">हे जार्विस सक्रिय</string>
+    <string name="status_speaking">जार्विस बोल रही है</string>
+    <string name="status_thinking">कमांड प्रोसेस हो रही है</string>
+    <string name="hint_command_input">हिन्दी या अंग्रेजी में जार्विस से पूछें...</string>
+    <string name="voice_channel_name">जार्विस वीआईपी वॉइस कोर</string>
+    <string name="voice_channel_desc">हे जार्विस हैंड्स-फ़्री मोड चालू रहने पर सूचना दिखाता है।</string>
+</resources>

@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Jarvis VIP</string>
+    <string name="accessibility_service_label">Jarvis VIP Navigation Assistant</string>
+    <string name="accessibility_service_description">Opt-in navigation assistant for voice commands such as Go Back, Go Home, Open Recents, and Open Notifications. Only active when explicitly enabled by the user.</string>
+    <string name="notification_listener_label">Jarvis VIP Notification Reader</string>
+    <string name="auth_title">JARVIS VIP</string>
+    <string name="auth_subtitle">Personal AI Command Center • Hindi &amp; English</string>
+    <string name="auth_sign_in_cta">Sign in with Google</string>
+    <string name="nav_hud">HUD</string>
+    <string name="nav_chat">Chat</string>
+    <string name="nav_tasks">Planner</string>
+    <string name="nav_control">Control</string>
+    <string name="nav_settings">Settings</string>
+    <string name="status_standby">CORE ONLINE • READY</string>
+    <string name="status_listening">LISTENING • SPEAK NOW</string>
+    <string name="status_wake_word">HEY JARVIS ACTIVE</string>
+    <string name="status_speaking">JARVIS SPEAKING</string>
+    <string name="status_thinking">PROCESSING COMMAND</string>
+    <string name="hint_command_input">Ask Jarvis in English or Hindi...</string>
+    <string name="voice_channel_name">Jarvis VIP Voice Core</string>
+    <string name="voice_channel_desc">Persistent notification while Hey JARVIS hands-free wake word mode is active.</string>
+</resources>

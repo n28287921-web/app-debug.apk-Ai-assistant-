@@ -1,0 +1,171 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             data.preferredLanguage in ['bilingual', 'en', 'hi'] &&
+             data.voiceEnabled is bool &&
+             data.handsFreeWakeWord is bool &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 160)) &&
+             (!('backendBaseUrl' in data) || (data.backendBaseUrl is string && data.backendBaseUrl.size() <= 300)) &&
+             (!('openAiModel' in data) || (data.openAiModel is string && data.openAiModel.size() >= 1 && data.openAiModel.size() <= 60)) &&
+             (!('accessibilityConsentGranted' in data) || data.accessibilityConsentGranted is bool) &&
+             (!('notificationListenerConsentGranted' in data) || data.notificationListenerConsentGranted is bool) &&
+             (!('approvedPreferencesSummary' in data) || (data.approvedPreferencesSummary is string && data.approvedPreferencesSummary.size() <= 1000)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidChatMessage(data) {
+      return data.role in ['user', 'assistant', 'system'] &&
+             data.content is string && data.content.size() >= 1 && data.content.size() <= 8000 &&
+             data.languageTag in ['en', 'hi', 'bilingual'] &&
+             (!('actionSummary' in data) || (data.actionSummary is string && data.actionSummary.size() <= 500)) &&
+             (!('actionStatus' in data) || data.actionStatus in ['none', 'pending_confirm', 'executed', 'failed', 'cancelled']) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAssistantTask(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             data.category in ['task', 'reminder', 'schedule', 'birthday'] &&
+             data.completed is bool &&
+             data.priority in ['low', 'normal', 'high'] &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+             (!('dueDateLabel' in data) || (data.dueDateLabel is string && data.dueDateLabel.size() <= 60)) &&
+             (!('dueTimeLabel' in data) || (data.dueTimeLabel is string && data.dueTimeLabel.size() <= 40)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidActionLog(data) {
+      return data.commandText is string && data.commandText.size() >= 1 && data.commandText.size() <= 500 &&
+             data.actionType is string && data.actionType.size() >= 1 && data.actionType.size() <= 80 &&
+             data.targetSummary is string && data.targetSummary.size() <= 300 &&
+             data.status in ['executed', 'confirmed', 'cancelled', 'failed'] &&
+             data.detailMessage is string && data.detailMessage.size() <= 500 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get, list: if isOwner(userId) && isValidId(userId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'preferredLanguage', 'voiceEnabled', 'handsFreeWakeWord', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'displayName', 'email', 'preferredLanguage', 'voiceEnabled',
+                         'handsFreeWakeWord', 'backendBaseUrl', 'openAiModel',
+                         'accessibilityConsentGranted', 'notificationListenerConsentGranted',
+                         'approvedPreferencesSummary', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidUserProfile(incoming());
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'displayName', 'email', 'preferredLanguage', 'voiceEnabled',
+                         'handsFreeWakeWord', 'backendBaseUrl', 'openAiModel',
+                         'accessibilityConsentGranted', 'notificationListenerConsentGranted',
+                         'approvedPreferencesSummary', 'updatedAt'
+                       ]);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /chatMessages/{messageId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(messageId);
+        allow list: if isOwner(userId) && isValidId(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(messageId) &&
+                         incoming().keys().hasAll(['role', 'content', 'languageTag', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['role', 'content', 'languageTag', 'actionSummary', 'actionStatus', 'createdAt', 'updatedAt']) &&
+                         isValidChatMessage(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(messageId) &&
+                         isValidChatMessage(incoming()) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().role == existing().role &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['content', 'languageTag', 'actionSummary', 'actionStatus', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(messageId);
+      }
+
+      match /tasks/{taskId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(taskId);
+        allow list: if isOwner(userId) && isValidId(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(taskId) &&
+                         incoming().keys().hasAll(['title', 'category', 'completed', 'priority', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['title', 'notes', 'category', 'dueDateLabel', 'dueTimeLabel', 'completed', 'priority', 'createdAt', 'updatedAt']) &&
+                         isValidAssistantTask(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(taskId) &&
+                         isValidAssistantTask(incoming()) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'notes', 'category', 'dueDateLabel', 'dueTimeLabel', 'completed', 'priority', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(taskId);
+      }
+
+      match /actionLogs/{logId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(logId);
+        allow list: if isOwner(userId) && isValidId(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(logId) &&
+                         incoming().keys().hasAll(['commandText', 'actionType', 'targetSummary', 'status', 'detailMessage', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['commandText', 'actionType', 'targetSummary', 'status', 'detailMessage', 'createdAt', 'updatedAt']) &&
+                         isValidActionLog(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(userId) &&
+                         isValidId(logId) &&
+                         isValidActionLog(incoming()) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'detailMessage', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(logId);
+      }
+    }
+  }
+}
